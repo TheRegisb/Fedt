@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 #coding: utf-8
 #
-#  [Place holder]
+#  Fedt -- Food Expiration Date Tracker
 #  Copyright (C) 2017 Régis BERTHELOT
 #
 #  This program is free software: you can redistribute it and/or modify
