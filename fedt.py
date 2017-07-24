@@ -45,8 +45,7 @@ class food_registry:
                 if (len(element[0]) == 0):
                     raise ValueError("Error at line %d: No name registred." % (i + 1))
                 if not (self.is_iso_date(element[1])):
-                    print ("Error at line %d: Date is not ISO formated (YYYY-MM-DD)." % (i + 1), file=stderr)
-                    #throw error, raise exception
+                    raise ValueError("Error at line %d: Date is not ISO formated (YYYY-MM-DD)." % (i + 1))
                 self.food_dic[element[0]] = element[1]
 
             raw_file.close()
@@ -75,7 +74,7 @@ class food_registry:
         tmp_name = name.capitalize()
         i = 1
         while (tmp_name in self.food_dic): # If "name" is already inside, add a number at the end of the new one
-            tmp_name = name.capitalize() + "." + str(i) # TODOchange duplicate handling (e.g. Food(x2) : ...)
+            tmp_name = name.capitalize() + "." + str(i) # TODO change duplicate handling (e.g. Food(x2) : ...)
             i += 1
         self.food_dic[tmp_name] = date
         self.update = True
@@ -83,6 +82,7 @@ class food_registry:
     def delete_food(self, name):
         if (name in self.food_dic):
             self.food_dic.pop(name, None) # TODO rename duplicate
+            self.update = True
         else:
             print ("remove: No \"%s\" item registered." % (name), file=stderr)
 
@@ -110,6 +110,8 @@ class food_registry:
         print ("Food list successfully exported to \"%s\" file." % (path))
         self.bk_dic.clear()
         self.bk_dic.update(self.food_dic)
+        if (path == filename): # The update is still pending for the default file
+            self.update = False
 
     def update_pending(self):
         return (self.update)
@@ -192,7 +194,7 @@ def help_msg():
            "version\t\tShow current version and disclaimer")
 
 def version():
-    print ("Fedt -- Food Expiration Date Tracker\n  Version: 0.7")
+    print ("Fedt -- Food Expiration Date Tracker\n  Version: 0.7.2")
     print ("  Made by: Régis Berthelot")
     print ("  License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licences/gpl.htlm>")
     print ("  This software is free, and you are welcome to redistribute it under certain contitions.")
