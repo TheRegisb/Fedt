@@ -24,9 +24,9 @@ from operator import itemgetter
 import datetime
 
 class food_registry:
-    food_dic = {} # dictionary to be live edited
-    bk_dic = {} # backup, changed only upon self.export_current()
-    filename = "" # defined by user upon creation
+    food_dic = {} # Dictionary to be live edited, each member being NAME: [DATE, QUANTITY]
+    bk_dic = {} # Backup, changed only upon self.export_current()
+    filename = "" # Defined by user upon creation
     update = False # Keep track of unsaved changes
 
     # Look up for "filename" (./.food.dat by defaults)
@@ -46,7 +46,9 @@ class food_registry:
                     raise ValueError("Error at line %d: No name registred." % (i + 1))
                 if not (self.is_iso_date(element[1])):
                     raise ValueError("Error at line %d: Date is not ISO formated (YYYY-MM-DD)." % (i + 1))
-                self.food_dic[element[0]] = element[1]
+                if (not element[2] or (element[2] and int(element[2]) <= 0)): # TODO test if element[2] is indeed an int
+                    raise ValueError("Error at line %d: Quantity is missing or equal or lesser than 0." % (i + 1))
+                self.food_dic[element[0]] = [element[1], int(element[2])]
 
             raw_file.close()
             self.bk_dic.update(self.food_dic)
@@ -65,18 +67,24 @@ class food_registry:
             max_value = len(max(self.food_dic, key=len)) # Dynamically adapt the length for clean formatting
             sorted_food = sorted(self.food_dic.items(), key=itemgetter(1))
             for i in range(0, len(sorted_food)):
-                print ("%s : %s" % (sorted_food[i][0].ljust(max_value), sorted_food[i][1].rjust(10)))
+                print (sorted_food[i])
+                # print ("%s %s: %s" % (sorted_food[i][0].ljust(max_value), "(xTODO quantity)", sorted_food[i][1][0].rjust(10))) # TODO quantity
 
-    def add_food(self, name, date):
+    def add_food(self, name, date, quantity = 1):
         if not (self.is_iso_date(date)):
             print ("add: Date error (expected ISO date \"YYYY-MM-DD\").", file=stderr)
             return
         tmp_name = name.capitalize()
         i = 1
         while (tmp_name in self.food_dic): # If "name" is already inside, add a number at the end of the new one
-            tmp_name = name.capitalize() + "." + str(i) # TODO change duplicate handling (e.g. Food(x2) : ...)
+            if (date == self.food_dic[tmp_name][0]): # Simply increase quantity if item share same name and date of exisiting item
+                self.food_dic[tmp_name][1] += quantity
+                break;
+            tmp_name = name.capitalize() + "." + str(i) # Append a number in case of same name but different date
             i += 1
-        self.food_dic[tmp_name] = date
+        else: # If item does not already exist, create a new entry
+            tmp_item = [date, quantity]
+            self.food_dic[tmp_name] = tmp_item
         self.update = True
 
     def delete_food(self, name):
@@ -106,11 +114,11 @@ class food_registry:
             path = self.filename
         raw_file = open(path, "w")
         for item in self.food_dic:
-            raw_file.write(item + ':' + self.food_dic[item] + '\n')
+            raw_file.write(item + ':' + self.food_dic[item][0] + ':' + str(self.food_dic[item][1]) + '\n')
         print ("Food list successfully exported to \"%s\" file." % (path))
         self.bk_dic.clear()
         self.bk_dic.update(self.food_dic)
-        if (path == filename): # The update is still pending for the default file
+        if (path == self.filename): # The update is no longer considered pending if default file is updated
             self.update = False
 
     def update_pending(self):
