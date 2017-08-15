@@ -87,7 +87,7 @@ class food_registry:
             print ("remove: No \"%s\" item registered." % (name), file=stderr)
 
     def revert(self):
-        if (update_pending):
+        if (update):
             command = str(input("All unsaved changes will be lost. Continue? [Yes/No]: ")).strip().lower()
             while (True):
                 if (command == "y" or command == "yes"):
