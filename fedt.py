@@ -64,13 +64,12 @@ class food_registry:
         if (len(self.food_dic) == 0):
             print ("No registered item.")
         else:
-            max_value = len(max(self.food_dic, key=len)) # Dynamically adapt the length for clean formatting
+            max_value = len(max(self.food_dic, key=len)) # Get longest item name for formating reference
+            f = '{0:<%d} {1:<5}: {2}' % (max_value) # Uniform formating as long quantity <= 99
             sorted_food = sorted(self.food_dic.items(), key=itemgetter(1))
             for i in range(0, len(sorted_food)):
-                dyn_qt = ("" if sorted_food[i][1][1] == 1 else " (x%d)" % (sorted_food[i][1][1]))
-                print ("%s%s: %s" % (sorted_food[i][0], dyn_qt.ljust(max_value), sorted_food[i][1][0].rjust(10)))
-                # print ("%s" % ("" if sorted_food[i][1][1] == 1 else "(x%d)" % (sorted_food[i][1][1])))
-                # print ("%s %s: %s" % (sorted_food[i][0].ljust(max_value), "(xTODO quantity)", sorted_food[i][1][0].rjust(10))) # TODO quantity
+                dyn_qt = ("" if sorted_food[i][1][1] == 1 else "(x%02d)" % (sorted_food[i][1][1]))
+                print (f.format(sorted_food[i][0], dyn_qt, sorted_food[i][1][0]))
 
     def add_food(self, name, date, quantity = 1):
         if not (self.is_iso_date(date)):
@@ -78,8 +77,8 @@ class food_registry:
             return
         tmp_name = name.capitalize()
         i = 1
-        while (tmp_name in self.food_dic): # If "name" is already inside, add a number at the end of the new one
-            if (date == self.food_dic[tmp_name][0]): # Simply increase quantity if item share same name and date of exisiting item
+        while (tmp_name in self.food_dic):
+            if (date == self.food_dic[tmp_name][0]): # Only increase quantity if item share same name & date of an exisiting item
                 self.food_dic[tmp_name][1] += quantity
                 break;
             tmp_name = name.capitalize() + "." + str(i) # Append a number in case of same name but different date
@@ -120,7 +119,7 @@ class food_registry:
         print ("Food list successfully exported to \"%s\" file." % (path))
         self.bk_dic.clear()
         self.bk_dic.update(self.food_dic)
-        if (path == self.filename): # The update is no longer considered pending if default file is updated
+        if (path == self.filename): # The update is no longer considered pending only if the default file is updated
             self.update = False
 
     def update_pending(self):
@@ -143,11 +142,13 @@ def main():
         elif (args[0] == "add"):
             if (len(args) == 3):
                 current_register.add_food(args[1].strip(), args[2])
+            elif (len(args) == 4 and args[3].isdigit()):
+                current_register.add_food(args[1].strip(), args[2], int(args[3]))
             else:
-                print ("add: Syntax error (expected \"add [FOOD_NAME] [ISO_DATE]\").", file=stderr)
+                print ("add: Syntax error (expected \"add [FOOD_NAME] [ISO_DATE] ([QUANTITY])\").", file=stderr)
 
         elif (args[0] == "delete"):
-            if (len(args) == 2):
+            if (len(args) == 2 or len(args) == 3):
                 current_register.delete_food(args[1].capitalize())
             else:
                 print ("delete: Syntax error (expected \"delete [FOOD_NAME]\").", file=stderr)
