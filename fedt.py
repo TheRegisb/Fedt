@@ -24,21 +24,19 @@ from operator import itemgetter
 import datetime
 
 class food_registry:
-    food_dic = {} # Dictionary to be live edited, each member being NAME: [DATE, QUANTITY]
+    food_dic = {} # Dictionary to be live edited, each member being NAME: [ISO_DATE, QUANTITY]
     bk_dic = {} # Backup, changed only upon self.export_current()
     filename = "" # Defined by user upon creation
     update = False # Keep track of unsaved changes
 
     # Look up for "filename" (./.food.dat by defaults)
-    # Each line is formatted as NAME:ISO_DATE
-    # Validate and add each line into food_dic
-
+    # Each line is formatted as NAME:ISO_DATE:QUANTITY
     def __init__(self, filename):
         self.filename = filename
         if (isfile(filename)):
             raw_file = open(filename, "r")
             lines = raw_file.readlines()
-            lines = [x.strip('\n') for x in lines] # Lambda removing all carriage return
+            lines = [x.strip('\n') for x in lines] # Lambda removing all carriage returns
 
             for i in range(0, len(lines)):
                 element = lines[i].split(':');
@@ -46,8 +44,8 @@ class food_registry:
                     raise ValueError("Error at line %d: No name registred." % (i + 1))
                 if not (self.is_iso_date(element[1])):
                     raise ValueError("Error at line %d: Date is not ISO formated (YYYY-MM-DD)." % (i + 1))
-                if (not element[2] or (element[2] and int(element[2]) <= 0)): # TODO test if element[2] is indeed an int
-                    raise ValueError("Error at line %d: Quantity is missing or equal or lesser than 0." % (i + 1))
+                if (not element[2] or (element[2] and element[2].isdigit() and int(element[2]) <= 0)):
+                    raise ValueError("Error at line %d: Quantity is missing, lesser than 1 or not a number." % (i + 1))
                 self.food_dic[element[0]] = [element[1], int(element[2])]
 
             raw_file.close()
@@ -81,9 +79,9 @@ class food_registry:
             if (date == self.food_dic[tmp_name][0]): # Only increase quantity if item share same name & date of an exisiting item
                 self.food_dic[tmp_name][1] += quantity
                 break;
-            tmp_name = name.capitalize() + "." + str(i) # Append a number in case of same name but different date
+            tmp_name = name.capitalize() + "." + str(i) # Append to the name a number in case of same name but different date
             i += 1
-        else: # If item does not already exist, create a new entry
+        else: # If item does not exist at all, create a new entry
             tmp_item = [date, quantity]
             self.food_dic[tmp_name] = tmp_item
         self.update = True
@@ -103,7 +101,7 @@ class food_registry:
             print ("remove: No \"%s\" item registered." % (name), file=stderr)
 
     def revert(self):
-        if (update):
+        if (self.update):
             command = str(input("All unsaved changes will be lost. Continue? [Yes/No]: ")).strip().lower()
             while (True):
                 if (command == "y" or command == "yes"):
@@ -111,7 +109,7 @@ class food_registry:
                 elif (command == "n" or command == "no"):
                     return
                 else:
-                    command = str(input("Please answear [Yes/No]: ")).strip().lower()
+                    command = str(input("Please answer [Yes/No]: ")).strip().lower()
         self.food_dic.clear()
         self.food_dic.update(self.bk_dic)
         print ("Current list reverted to last update.")
@@ -135,7 +133,6 @@ class food_registry:
 
 def main():
     current_register = food_registry(".food.dat") # Default save file name. Can be changed here before loading the program.
-
     while (True): # Interactive command menu
         command = str(input("Command: "))
         args = command.strip().lower().split(' ')
@@ -203,26 +200,9 @@ def main():
 def args_error(cmd_name): # Common error message for one argument commands
     print ("%s: Too many arguments." % (cmd_name), file=stderr)
 
-def help_msg():
-    print ("display\t\t\t\tShow all registered items.\n"
-           "add [food] [ISO_date]\t\tAdd the [food] item in list with the [ISO_date] (YYYY-MM-DD).\n"
-           "delete [food]\t\t\tRemove said [food] if in list.\n"
-           "update (optional[FILE_NAME])\tExport the current food list into default save file unless FILE_NAME is provided.\n"
-           "revert\t\t\t\tRevert to the last update, losing all unsaved changes.\n"
-           "exit/quit\t\t\tQuit the program.\n"
-           "help\t\t\t\tShow this message."
-           "version\t\tShow current version and disclaimer")
-
-def version():
-    print ("Fedt -- Food Expiration Date Tracker\n  Version: 0.7.2")
-    print ("  Made by: Régis Berthelot")
-    print ("  License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licences/gpl.htlm>")
-    print ("  This software is free, and you are welcome to redistribute it under certain contitions.")
-    print ("  This program comes with ABSOLUTELY NO WARRANTY");
-
 def ask_leaving(cur_reg):
     if (cur_reg.update_pending()):
-        command = str(input("Unsaved changes. Quit anyways? [Save/Yes/No]: ")).strip().lower()
+        command = str(input("Unsaved changes. Quit anyway? [Save/Yes/No]: ")).strip().lower()
         while (True):
             if (command == "s" or command == "save"):
                 cur_reg.export_current()
@@ -231,9 +211,27 @@ def ask_leaving(cur_reg):
                 exit(0)
             elif (command == "n" or command == "no"):
                 break;
-            command = str(input("Please answear [Save/Yes/No]: ")).strip().lower()
+            command = str(input("Please answer [Save/Yes/No]: ")).strip().lower()
     else:
         exit(0)
+
+def help_msg():
+    f = '{0:<34} -> {1}'
+    print (f.format("display", "Show all registred items.\n")
+           + f.format("add [FOOD] [ISO_DATE] ([QUANTITY])", "Add one [FOOD] item at [ISO_DATE] (YYYY-MM-DD) or more if optional [QUANTITY] is provided.\n")
+           + f.format("delete [FOOD] ([QUANTITY])", "Remove one [FOOD] item or more if optional [QUANTITY] is provided.\n")
+           + f.format("update ([FILE_NAME])", "Export the current list into default save file unless [FILE_NAME] is provided (does not update default file in this case).\n")
+           + f.format("revert", "Revert to the last default file update state, losing all unsaved changes.\n")
+           + f.format("exit/quit", "Quit the program.\n")
+           + f.format("help", "Show this message.\n")
+           + f.format("version", "Show current version and disclaimer."))
+
+def version():
+    print ("Fedt -- Food Expiration Date Tracker\n  Version: 0.9.5")
+    print ("  Made by: Régis Berthelot")
+    print ("  License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licences/gpl.htlm>")
+    print ("  This software is free, and you are welcome to redistribute it under certain contitions.")
+    print ("  This program comes with ABSOLUTELY NO WARRANTY");
 
 if __name__ == "__main__":
     main()

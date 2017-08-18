@@ -2,9 +2,9 @@
 Food Expiration Date Tracker. A command line Python tool to keep an eye on your food.
 
 ## About
-Fedt is a command line only tool providing an interface to a user-defined list of food items and their expiration date. All items are saved in a plain text file, named ".food.dat" by default (can be changed at line 119 of fedt.py).
+Fedt is a command line only tool providing an interface to a user-defined list of food items and their expiration date. All items are saved in a plain text file, named ".food.dat" by default (can be changed at line 135 of fedt.py).
 
-Current version: 0.7
+Current version: 0.9.5
 
 This program is distributed under GNU GPLv3+ license and you are free to run, study, modify and redistribute the code under certain conditions.
 
@@ -27,12 +27,12 @@ You can now start Fedt and interact with the program. No command line arguments 
 
 8 commands are available:
 ```
-display				-> Display all registered items, sorted by ascending expiration date
-add [FOOD] [ISO_DATE]	   	-> Add [FOOD] item with [ISO_DATE] (YYYY-MM-DD) to the list
-delete [FOOD]			-> Remove [FOOD] item from list
-update (optional[FILE_NAME])	-> Export the current list to default save file, unless [FILE_NAME] is provided
-revert 				-> Revert to the last update, discarding all unsaved changes
-exit/quit			-> Leave the program; ask for confirmation if changes are pending
-help				-> Display the list of all available command
-version				-> Show current version and disclaimer
+display                            -> Show all registered items.
+add [FOOD] [ISO_DATE] ([QUANTITY]) -> Add one [FOOD] item at [ISO_DATE] (YYYY-MM-DD) or more if optional [QUANTITY] is provided.
+delete [FOOD] ([QUANTITY])         -> Remove one [FOOD] item or more if optional [QUANTITY] is provided.
+update ([FILE_NAME])               -> Export the current list into default save file unless [FILE_NAME] is provided (does not update default file in this case).
+revert                             -> Revert to the last default file update state, losing all unsaved changes.
+exit/quit                          -> Quit the program.
+help                               -> Show this message.
+version                            -> Show current version and disclaimer.
 ```
