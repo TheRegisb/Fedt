@@ -88,9 +88,16 @@ class food_registry:
             self.food_dic[tmp_name] = tmp_item
         self.update = True
 
-    def delete_food(self, name):
+    def delete_food(self, name, quantity = 1):
         if (name in self.food_dic):
-            self.food_dic.pop(name, None) # TODO rename duplicate
+            print (self.food_dic[name][1]);
+            if (self.food_dic[name][1] == 1):
+                self.food_dic.pop(name, None) # TODO rename duplicate
+            elif (quantity <= self.food_dic[name][1]):
+                self.food_dic[name][1] -= quantity;
+            else:
+                print ("Error: Cannot delete more than %d %s." % (self.food_dic[name][1], name), file=stderr)
+                return
             self.update = True
         else:
             print ("remove: No \"%s\" item registered." % (name), file=stderr)
@@ -142,16 +149,18 @@ def main():
         elif (args[0] == "add"):
             if (len(args) == 3):
                 current_register.add_food(args[1].strip(), args[2])
-            elif (len(args) == 4 and args[3].isdigit()):
+            elif (len(args) == 4 and args[3].isdigit() and int(args[3]) > 0):
                 current_register.add_food(args[1].strip(), args[2], int(args[3]))
             else:
                 print ("add: Syntax error (expected \"add [FOOD_NAME] [ISO_DATE] ([QUANTITY])\").", file=stderr)
 
         elif (args[0] == "delete"):
-            if (len(args) == 2 or len(args) == 3):
+            if (len(args) == 2):
                 current_register.delete_food(args[1].capitalize())
+            elif (len(args) == 3 and args[2].isdigit() and int(args[2]) > 0):
+                current_register.delete_food(args[1].capitalize(), int(args[2]))
             else:
-                print ("delete: Syntax error (expected \"delete [FOOD_NAME]\").", file=stderr)
+                print ("delete: Syntax error (expected \"delete [FOOD_NAME] ([QUANTITY])\").", file=stderr)
 
         elif (args[0] == "update"):
             if (len(args) == 1 or len(args) == 2):
