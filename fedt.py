@@ -67,7 +67,9 @@ class food_registry:
             max_value = len(max(self.food_dic, key=len)) # Dynamically adapt the length for clean formatting
             sorted_food = sorted(self.food_dic.items(), key=itemgetter(1))
             for i in range(0, len(sorted_food)):
-                print (sorted_food[i])
+                dyn_qt = ("" if sorted_food[i][1][1] == 1 else " (x%d)" % (sorted_food[i][1][1]))
+                print ("%s%s: %s" % (sorted_food[i][0], dyn_qt.ljust(max_value), sorted_food[i][1][0].rjust(10)))
+                # print ("%s" % ("" if sorted_food[i][1][1] == 1 else "(x%d)" % (sorted_food[i][1][1])))
                 # print ("%s %s: %s" % (sorted_food[i][0].ljust(max_value), "(xTODO quantity)", sorted_food[i][1][0].rjust(10))) # TODO quantity
 
     def add_food(self, name, date, quantity = 1):
@@ -186,7 +188,7 @@ def main():
         else:
             print ("Error: Unknow command (type help for commands list).", file=stderr)
 
-# Below are the function not relevant for the food_registry class itself
+# Below are the functions not relevant for the food_registry class itself
 
 def args_error(cmd_name): # Common error message for one argument commands
     print ("%s: Too many arguments." % (cmd_name), file=stderr)
